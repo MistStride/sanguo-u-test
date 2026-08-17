@@ -100,6 +100,17 @@ const QUESTIONS = [
 
 const WEIGHT = 3;
 
+/* 人物分组（与主公阵营对应）：每个选项会给同组其他英雄 +1 分细微差分，
+   这样排行更平滑、不会大片为 0，又不会乱加无关数值。 */
+const FIG_GROUP = {
+  guanyu:"liu", zhaoyun:"liu", zhangfei:"liu", zhuge:"liu",
+  sima:"cao", guojia:"cao",
+  zhouyu:"sun", luxun:"sun",
+  huangzhong:"yuan", machao:"yuan",
+  xuchu:"dong", dianwei:"dong",
+  ganning:"lvbu", weiyan:"lvbu"
+};
+
 /* ---------- 状态 ---------- */
 let current = 0;
 const answers = new Array(QUESTIONS.length).fill(null); // 存用户选中的选项对象
@@ -181,13 +192,20 @@ function calcScores(){
     // ans 是用户选中的选项对象，已含 l（主公）与 f（人物）
     lord[ans.l] += WEIGHT;
     fig[ans.f]  += WEIGHT;
+    // 同阵营的其他英雄获得细微差分：每个选项都给同组英雄 +1，使排行更平滑、不再大片为 0
+    Object.keys(FIG_GROUP).forEach(k => {
+      if (FIG_GROUP[k] === FIG_GROUP[ans.f] && k !== ans.f) fig[k] += 1;
+    });
   });
 
-  // 每题每个选项都会给一个主公和一个人物加分，所以理论最大值按出现次数 * WEIGHT 算
+  // 理论最大值（主公用绝对百分比；人物用相对百分比，见 renderScale）
   QUESTIONS.forEach(q => {
     q.opts.forEach(o => {
       maxLord[o.l] += WEIGHT;
       maxFig[o.f] += WEIGHT;
+      Object.keys(FIG_GROUP).forEach(k => {
+        if (FIG_GROUP[k] === FIG_GROUP[o.f] && k !== o.f) maxFig[k] += 1;
+      });
     });
   });
 
@@ -221,8 +239,15 @@ function renderScale(r){
   `).join("");
 
   const lordRows = toRows(r.lord, r.maxLord, LORDS);
-  // 人物只展示本次实际触及的（得分>0），避免一长串 0% 的空排行
-  const figRowsAll = toRows(r.fig, r.maxFig, FIGURES);
+  // 人物按“相对最高者”算百分比，使梯度自然、同组英雄有细微差分；得分 0 的（未触发阵营）不列入
+  const topFigScore = Math.max(...Object.keys(r.fig).map(k => r.fig[k]));
+  const figRowsAll = Object.keys(r.fig)
+    .map(k => ({
+      name: FIGURES[k].name,
+      score: r.fig[k],
+      pct: topFigScore ? Math.min(99, Math.round(r.fig[k] / topFigScore * 100)) : 0
+    }))
+    .sort((a, b) => b.score - a.score);
   const figRows = figRowsAll.filter(row => row.score > 0);
 
   $("scale").innerHTML = `
@@ -234,7 +259,7 @@ function renderScale(r){
     <div class="scale-section">
       <div class="scale-subtitle">你触及的三国英雄</div>
       ${makeBars(figRows.length ? figRows : [{name:"（无）", pct:0}])}
-      <p class="scale-tip">仅展示本次答题触及的英雄，未选中的不列入，避免空排行。</p>
+      <p class="scale-tip">你最代表的英雄加最多分，同阵营英雄得细微差分；未触发的英雄不列入。</p>
     </div>
     <p class="scale-tip">注：主公与人物分别计分，因此它们可以不同。例如适合追随曹操，但性格更像司马懿。</p>
   `;
@@ -260,7 +285,7 @@ function finish(){
 
   $("second-name").textContent = S.name;
   $("second-title").textContent = S.title;
-  $("second-desc").textContent = `若换一种际遇，你也能在「${S.name}」麾下施展拳脚——这是你第二适配的主公（最适合追随的第二人选），与“你最像谁”是两回事。`;
+  $("second-desc").textContent = `换种际遇，你也能在「${S.name}」麾下施展拳脚。`;
 
   // 渲染详细量表
   renderScale(r);
