@@ -256,9 +256,7 @@ function renderScale(r){
     <div class="scale-section">
       <div class="scale-subtitle">三国英雄 · 相似度排行</div>
       ${makeBars(figRows.length ? figRows : [{name:"（无）", pct:0}])}
-      <p class="scale-tip">数值为该英雄在你命中英雄总分里的占比，越高越像；未触发的英雄不列入。</p>
     </div>
-    <p class="scale-tip">注：主公与人物分别计分，因此可以不同。例如适合追随曹操，却性格更像司马懿，不算冲突。</p>
   `;
 }
 
