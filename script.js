@@ -16,7 +16,7 @@ const LORDS = {
     analysis:"你天赋过人、重自由，不喜被束缚，在个人英雄的路上能尽情发挥、所向披靡。可你的短板是缺了根基与信义——一柄好矛若没有握紧的手，终究难成大事。找个能托付的阵营，你的锋芒才有人接住。" }
 };
 
-/* 历史人物数据：你最像的三国英雄 */
+/* 历史人物数据：你最像的三国英雄（14 位，覆盖六位主公的性情维度） */
 const FIGURES = {
   guanyu:    { name:"关羽",   zi:"字云长",   desc:"忠义双全、傲骨铮铮。你重诺守信，做人有棱角，朋友信你、对手敬你。" },
   zhaoyun:   { name:"赵云",   zi:"字子龙",   desc:"沉稳忠勇、进退有度。你靠得住，关键时刻能扛事，是团队里最让人放心的那一个。" },
@@ -24,24 +24,14 @@ const FIGURES = {
   zhuge:     { name:"诸葛亮", zi:"字孔明",   desc:"鞠躬尽瘁、慎思密谋。你思虑周全、凡事有章法，靠脑子而非嗓门赢得尊重。" },
   sima:      { name:"司马懿", zi:"字仲达",   desc:"隐忍蓄势、老谋深算。你善于等待与布局，不争一时之高下，笑到最后的往往是你。" },
   guojia:    { name:"郭嘉",   zi:"字奉孝",   desc:"鬼才（料事如神）。你眼光毒、敢下注，别人还在犹豫，你已看见十步之后的局。" },
-  xunyu:     { name:"荀彧",   zi:"字文若",   desc:"王佐之才、雅量高致。你有格局也有底线，既能成事，也守得住心中的秩序。" },
-  jiaxu:     { name:"贾诩",   zi:"字文和",   desc:"乱世毒士、明哲保身。你看得透人心，出手狠、自保稳，活得比谁都清醒。" },
   zhouyu:    { name:"周瑜",   zi:"字公瑾",   desc:"才情横溢、意气风发。你又帅又能打，带着少年心气闯天下，招人喜欢也招人忌。" },
   luxun:     { name:"陆逊",   zi:"字伯言",   desc:"白衣渡江、少年统帅。你外柔内刚、忍辱负重，关键时刻一招定乾坤。" },
-  lushu:     { name:"鲁肃",   zi:"字子敬",   desc:"忠厚长者、大局为重。你看得清利害、也容得下分歧，是乱局里少有的稳定器。" },
-  taishici:  { name:"太史慈", zi:"字子义",   desc:"信义少年、酣战小霸王。你一诺千金、重情重义，刀光剑影里也守得住信字。" },
   huangzhong:{ name:"黄忠",   zi:"字汉升",   desc:"老当益壮、宝刀不老。你不凭年龄论英雄，越是被小看，越要让人刮目相看。" },
-  jiangwei:  { name:"姜维",   zi:"字伯约",   desc:"天水麒麟、继承遗志。你负重前行、死而后已，把别人的理想扛成了自己的命。" },
   machao:    { name:"马超",   zi:"字孟起",   desc:"西凉锦马超、骁勇剽悍。你出身名门、骄傲鲜衣，战场上是往无前的锋芒。" },
-  fazheng:   { name:"法正",   zi:"字孝直",   desc:"奇谋善断、恩怨分明。你记恩也记仇，护短而果决，是主公身边最锋利的那把刀。" },
   xuchu:     { name:"许褚",   zi:"字仲康",   desc:"虎痴猛将、忠勇无双。你憨直重义、护主不惜命，平时闷声，关键时刻最靠得住。" },
   dianwei:   { name:"典韦",   zi:"古之恶来", desc:"悍不畏死、以命护主。你舍生忘死、忠勇到了不要命的份上，是主公的最后一道墙。" },
-  huaxiong:  { name:"华雄",   zi:"董卓骁将", desc:"骁勇善战、敢打头阵。你越是硬仗越要争这口气，温酒之间已扬名阵前。" },
-  zhangliao: { name:"张辽",   zi:"字文远",   desc:"威震逍遥、勇冠三军。你临危扛旗、一句号令能稳全军，是天生的镇场之人。" },
   ganning:   { name:"甘宁",   zi:"字兴霸",   desc:"锦帆百骑、胆识过人。你不守成规、敢闯敢劫，草莽里也能闯出名堂。" },
-  weiyan:    { name:"魏延",   zi:"字文长",   desc:"骁勇任气、脑后有反骨。你不服管、有野心，偏要走出一条没人敢走的路。" },
-  gaoshun:   { name:"高顺",   zi:"陷阵营主", desc:"治军如铁、败而不降。你律己律人，沉默里藏着最硬的风骨。" },
-  huanggai:  { name:"黄盖",   zi:"字公覆",   desc:"苦肉老将、火攻建功。你甘担骂名、成全大局，老辣之处最见担当。" }
+  weiyan:    { name:"魏延",   zi:"字文长",   desc:"骁勇任气、脑后有反骨。你不服管、有野心，偏要走出一条没人敢走的路。" }
 };
 
 /* 题目：theme=小标题，q=题干，opts=[{t:选项, l:主公, f:人物}] */
@@ -73,38 +63,38 @@ const QUESTIONS = [
   { theme:"对敌", q:"与对手交锋，你的风格是？", opts:[
     { t:"以德服人，能招降不赶尽", l:"liu", f:"zhaoyun" },
     { t:"断其根本，不留后患", l:"cao", f:"guojia" },
-    { t:"离间分化，不战而屈人之兵", l:"sun", f:"luxun" },
+    { t:"离间分化，不战而屈人之兵", l:"sun", f:"zhouyu" },
     { t:"以威压人，杀鸡儆猴", l:"dong", f:"dianwei" }
   ]},
   { theme:"行事", q:"平日里你最像哪一种人？", opts:[
     { t:"宽厚待人，重情念旧", l:"liu", f:"zhaoyun" },
-    { t:"城府深沉，喜怒不形于色", l:"cao", f:"guojia" },
-    { t:"礼数周全，最重体面声望", l:"yuan", f:"jiangwei" },
+    { t:"城府深沉，喜怒不形于色", l:"cao", f:"sima" },
+    { t:"礼数周全，最重体面声望", l:"yuan", f:"machao" },
     { t:"独来独往，不喜受人约束", l:"lvbu", f:"ganning" }
   ]},
   { theme:"性情", q:"你的情绪底色是？", opts:[
     { t:"外冷内热，心里有数", l:"sun", f:"luxun" },
-    { t:"温厚含蓄，不爱争抢", l:"yuan", f:"jiangwei" },
-    { t:"性情如火，一点就着", l:"dong", f:"huaxiong" },
+    { t:"温厚含蓄，不爱争抢", l:"yuan", f:"huangzhong" },
+    { t:"性情如火，一点就着", l:"dong", f:"xuchu" },
     { t:"艺高人胆大，阵前也潇洒", l:"lvbu", f:"weiyan" }
   ]},
   { theme:"失败", q:"大败之后，你第一反应是？", opts:[
     { t:"愈挫愈勇，从头再来", l:"liu", f:"zhangfei" },
-    { t:"复盘布局，下次连本带利", l:"cao", f:"xunyu" },
-    { t:"及时止损，保住根基", l:"sun", f:"taishici" },
-    { t:"换个靠山，再图后计", l:"lvbu", f:"gaoshun" }
+    { t:"复盘布局，下次连本带利", l:"cao", f:"guojia" },
+    { t:"及时止损，保住根基", l:"sun", f:"luxun" },
+    { t:"换个靠山，再图后计", l:"lvbu", f:"ganning" }
   ]},
   { theme:"团队", q:"你理想的班底是？", opts:[
     { t:"兄弟同心，其利断金", l:"liu", f:"zhuge" },
-    { t:"能人为主，赏罚分明", l:"cao", f:"xunyu" },
-    { t:"门生故吏遍天下，靠人脉", l:"yuan", f:"fazheng" },
-    { t:"唯我独尊，顺我者昌", l:"dong", f:"zhangliao" }
+    { t:"能人为主，赏罚分明", l:"cao", f:"guojia" },
+    { t:"门生故吏遍天下，靠人脉", l:"yuan", f:"machao" },
+    { t:"唯我独尊，顺我者昌", l:"dong", f:"dianwei" }
   ]},
   { theme:"权力", q:"你如何看待权力？", opts:[
-    { t:"权力在手，天下我有", l:"cao", f:"jiaxu" },
-    { t:"权力是用来守住一方太平", l:"sun", f:"lushu" },
+    { t:"权力在手，天下我有", l:"cao", f:"sima" },
+    { t:"权力是用来守住一方太平", l:"sun", f:"luxun" },
     { t:"权力靠家世名望撑着", l:"yuan", f:"machao" },
-    { t:"功名本就是自己闯出来的", l:"lvbu", f:"huanggai" }
+    { t:"功名本就是自己闯出来的", l:"lvbu", f:"weiyan" }
   ]}
 ];
 
@@ -231,7 +221,9 @@ function renderScale(r){
   `).join("");
 
   const lordRows = toRows(r.lord, r.maxLord, LORDS);
-  const figRows  = toRows(r.fig,  r.maxFig,  FIGURES);
+  // 人物只展示本次实际触及的（得分>0），避免一长串 0% 的空排行
+  const figRowsAll = toRows(r.fig, r.maxFig, FIGURES);
+  const figRows = figRowsAll.filter(row => row.score > 0);
 
   $("scale").innerHTML = `
     <div class="scale-title">详细量表</div>
@@ -240,8 +232,9 @@ function renderScale(r){
       ${makeBars(lordRows)}
     </div>
     <div class="scale-section">
-      <div class="scale-subtitle">人物相似度排行</div>
-      ${makeBars(figRows)}
+      <div class="scale-subtitle">你触及的三国英雄</div>
+      ${makeBars(figRows.length ? figRows : [{name:"（无）", pct:0}])}
+      <p class="scale-tip">仅展示本次答题触及的英雄，未选中的不列入，避免空排行。</p>
     </div>
     <p class="scale-tip">注：主公与人物分别计分，因此它们可以不同。例如适合追随曹操，但性格更像司马懿。</p>
   `;
