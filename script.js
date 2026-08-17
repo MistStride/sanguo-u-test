@@ -164,9 +164,9 @@ function goBack(){
 
 /* ---------- 计分 ---------- */
 function calcScores(){
-  const lord = {}, fig = {};
-  Object.keys(LORDS).forEach(k => lord[k] = 0);
-  Object.keys(FIGURES).forEach(k => fig[k] = 0);
+  const lord = {}, fig = {}, maxLord = {}, maxFig = {};
+  Object.keys(LORDS).forEach(k => { lord[k] = 0; maxLord[k] = 0; });
+  Object.keys(FIGURES).forEach(k => { fig[k] = 0; maxFig[k] = 0; });
 
   answers.forEach((ans) => {
     if (ans === null) return;
@@ -175,14 +175,12 @@ function calcScores(){
     fig[ans.f]  += WEIGHT;
   });
 
-  // 主公最大可能得分（每题该主公最多拿 WEIGHT 分）
-  const maxLord = {};
-  Object.keys(LORDS).forEach(k => {
-    let m = 0;
-    QUESTIONS.forEach(q => {
-      if (q.opts.some(o => o.l === k)) m += WEIGHT;
+  // 每题每个选项都会给一个主公和一个人物加分，所以理论最大值按出现次数 * WEIGHT 算
+  QUESTIONS.forEach(q => {
+    q.opts.forEach(o => {
+      maxLord[o.l] += WEIGHT;
+      maxFig[o.f] += WEIGHT;
     });
-    maxLord[k] = m;
   });
 
   const topLord = Object.keys(lord).sort((a,b)=>lord[b]-lord[a])[0];
@@ -191,7 +189,44 @@ function calcScores(){
 
   const pct = maxLord[topLord] ? Math.min(99, Math.round(lord[topLord] / maxLord[topLord] * 100)) : 0;
 
-  return { topLord, secondLord, topFig, pct, lord, fig };
+  return { topLord, secondLord, topFig, pct, lord, fig, maxLord, maxFig };
+}
+
+/* ---------- 量表 ---------- */
+function renderScale(r){
+  const toRows = (scores, maxes, labels) =>
+    Object.keys(scores)
+      .map(k => ({
+        name: labels[k].name,
+        score: scores[k],
+        max: maxes[k],
+        pct: maxes[k] ? Math.min(99, Math.round(scores[k] / maxes[k] * 100)) : 0
+      }))
+      .sort((a, b) => b.score - a.score);
+
+  const makeBars = rows => rows.map(row => `
+    <div class="scale-row">
+      <span class="scale-name">${row.name}</span>
+      <div class="scale-track"><div class="scale-fill" style="width:${row.pct}%"></div></div>
+      <span class="scale-pct">${row.pct}%</span>
+    </div>
+  `).join("");
+
+  const lordRows = toRows(r.lord, r.maxLord, LORDS);
+  const figRows  = toRows(r.fig,  r.maxFig,  FIGURES);
+
+  $("scale").innerHTML = `
+    <div class="scale-title">详细量表</div>
+    <div class="scale-section">
+      <div class="scale-subtitle">主公适配度排行</div>
+      ${makeBars(lordRows)}
+    </div>
+    <div class="scale-section">
+      <div class="scale-subtitle">人物相似度排行</div>
+      ${makeBars(figRows)}
+    </div>
+    <p class="scale-tip">注：主公与人物分别计分，因此它们可以不同。例如适合追随曹操，但性格更像司马懿。</p>
+  `;
 }
 
 /* ---------- 结果 ---------- */
@@ -216,9 +251,14 @@ function finish(){
   $("second-title").textContent = S.title;
   $("second-desc").textContent = `你骨子里也有几分「${S.title}」的气质。`;
 
+  // 渲染详细量表
+  renderScale(r);
+
   $("share-url").textContent = location.href;
   showScreen("result");
   $("progress-fill").style.width = "100%";
+  // 结果页较长，回到顶部，避免标题被截掉
+  window.scrollTo(0, 0);
 }
 
 /* ---------- 分享 ---------- */
