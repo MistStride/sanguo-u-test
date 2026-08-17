@@ -209,9 +209,11 @@ function calcScores(){
   const secondLord = Object.keys(lord).sort((a,b)=>lord[b]-lord[a])[1];
   const topFig = Object.keys(fig).sort((a,b)=>fig[b]-fig[a])[0];
 
-  const pct = maxLord[topLord] ? Math.min(99, Math.round(lord[topLord] / maxLord[topLord] * 100)) : 0;
+  // 主公适配度统一用「全局最大理论分」作分母，保证结果卡与排行使用同一基准、可互相比较
+  const globalMaxLord = Math.max(...Object.values(maxLord));
+  const pct = globalMaxLord ? Math.min(99, Math.round(lord[topLord] / globalMaxLord * 100)) : 0;
 
-  return { topLord, secondLord, topFig, pct, lord, fig, maxLord };
+  return { topLord, secondLord, topFig, pct, lord, fig, maxLord, globalMaxLord };
 }
 
 
@@ -234,7 +236,14 @@ function renderScale(r){
     </div>
   `).join("");
 
-  const lordRows = toRows(r.lord, r.maxLord, LORDS);
+  // 主公排行：所有主公用同一个全局分母，保证排行第一与结果卡主公一致、可互相比较
+  const lordRows = Object.keys(r.lord)
+    .map(k => ({
+      name: LORDS[k].name,
+      score: r.lord[k],
+      pct: r.globalMaxLord ? Math.min(99, Math.round(r.lord[k] / r.globalMaxLord * 100)) : 0
+    }))
+    .sort((a, b) => b.score - a.score);
   // 人物排行用「占比」：该英雄得分 ÷ 全部英雄总分。这样冠军明显最高、其余平滑递减，
   // 且绝不会出现多个英雄并列 99% 的怪象；只显示得分>0 的英雄。
   const totalFig = Object.keys(r.fig).reduce((s, k) => s + r.fig[k], 0);
