@@ -100,9 +100,10 @@ const QUESTIONS = [
 
 const WEIGHT = 3;
 
-/* 人物分组（与主公阵营对应）：每个选项会给同组其他英雄 +1 分细微差分，
-   这样排行更平滑、不会大片为 0，又不会乱加无关数值。 */
-const FIG_GROUP = {
+/* 人物阵营分组（与主公对应）。每个选项给它真正代表的英雄 +3，
+   同时给同阵营其他英雄一个很小的分数（+0.5），目的是让排行有平滑梯度、不会出现
+   多个英雄恰好并列 99% 的怪象。用 0.5 而非整数 1，是为了让分数几乎不会完全相同。 */
+const FIG_CAMP = {
   guanyu:"liu", zhaoyun:"liu", zhangfei:"liu", zhuge:"liu",
   sima:"cao", guojia:"cao",
   zhouyu:"sun", luxun:"sun",
@@ -110,6 +111,7 @@ const FIG_GROUP = {
   xuchu:"dong", dianwei:"dong",
   ganning:"lvbu", weiyan:"lvbu"
 };
+const CAMP_BONUS = 0.5;
 
 /* ---------- 状态 ---------- */
 let current = 0;
@@ -183,30 +185,24 @@ function goBack(){
 
 /* ---------- 计分 ---------- */
 function calcScores(){
-  const lord = {}, fig = {}, maxLord = {}, maxFig = {};
+  const lord = {}, fig = {}, maxLord = {};
   Object.keys(LORDS).forEach(k => { lord[k] = 0; maxLord[k] = 0; });
-  Object.keys(FIGURES).forEach(k => { fig[k] = 0; maxFig[k] = 0; });
+  Object.keys(FIGURES).forEach(k => { fig[k] = 0; });
 
   answers.forEach((ans) => {
     if (ans === null) return;
     // ans 是用户选中的选项对象，已含 l（主公）与 f（人物）
     lord[ans.l] += WEIGHT;
-    fig[ans.f]  += WEIGHT;
-    // 同阵营的其他英雄获得细微差分：每个选项都给同组英雄 +1，使排行更平滑、不再大片为 0
-    Object.keys(FIG_GROUP).forEach(k => {
-      if (FIG_GROUP[k] === FIG_GROUP[ans.f] && k !== ans.f) fig[k] += 1;
+    fig[ans.f]  += WEIGHT;   // 主代表英雄拿满分
+    // 同阵营其他英雄拿极小差分（0.5），让排行平滑、避免多人并列 99%
+    Object.keys(FIG_CAMP).forEach(k => {
+      if (FIG_CAMP[k] === FIG_CAMP[ans.f] && k !== ans.f) fig[k] += CAMP_BONUS;
     });
   });
 
-  // 理论最大值（主公用绝对百分比；人物用相对百分比，见 renderScale）
+  // 主公理论最大值（用于主公适配度的绝对百分比）
   QUESTIONS.forEach(q => {
-    q.opts.forEach(o => {
-      maxLord[o.l] += WEIGHT;
-      maxFig[o.f] += WEIGHT;
-      Object.keys(FIG_GROUP).forEach(k => {
-        if (FIG_GROUP[k] === FIG_GROUP[o.f] && k !== o.f) maxFig[k] += 1;
-      });
-    });
+    q.opts.forEach(o => { maxLord[o.l] += WEIGHT; });
   });
 
   const topLord = Object.keys(lord).sort((a,b)=>lord[b]-lord[a])[0];
@@ -215,8 +211,9 @@ function calcScores(){
 
   const pct = maxLord[topLord] ? Math.min(99, Math.round(lord[topLord] / maxLord[topLord] * 100)) : 0;
 
-  return { topLord, secondLord, topFig, pct, lord, fig, maxLord, maxFig };
+  return { topLord, secondLord, topFig, pct, lord, fig, maxLord };
 }
+
 
 /* ---------- 量表 ---------- */
 function renderScale(r){
@@ -225,7 +222,6 @@ function renderScale(r){
       .map(k => ({
         name: labels[k].name,
         score: scores[k],
-        max: maxes[k],
         pct: maxes[k] ? Math.min(99, Math.round(scores[k] / maxes[k] * 100)) : 0
       }))
       .sort((a, b) => b.score - a.score);
@@ -239,16 +235,17 @@ function renderScale(r){
   `).join("");
 
   const lordRows = toRows(r.lord, r.maxLord, LORDS);
-  // 人物按“相对最高者”算百分比，使梯度自然、同组英雄有细微差分；得分 0 的（未触发阵营）不列入
-  const topFigScore = Math.max(...Object.keys(r.fig).map(k => r.fig[k]));
-  const figRowsAll = Object.keys(r.fig)
+  // 人物排行用「占比」：该英雄得分 ÷ 全部英雄总分。这样冠军明显最高、其余平滑递减，
+  // 且绝不会出现多个英雄并列 99% 的怪象；只显示得分>0 的英雄。
+  const totalFig = Object.keys(r.fig).reduce((s, k) => s + r.fig[k], 0);
+  const figRows = Object.keys(r.fig)
     .map(k => ({
       name: FIGURES[k].name,
       score: r.fig[k],
-      pct: topFigScore ? Math.min(99, Math.round(r.fig[k] / topFigScore * 100)) : 0
+      pct: totalFig ? Math.min(99, Math.round(r.fig[k] / totalFig * 100)) : 0
     }))
+    .filter(row => row.score > 0)
     .sort((a, b) => b.score - a.score);
-  const figRows = figRowsAll.filter(row => row.score > 0);
 
   $("scale").innerHTML = `
     <div class="scale-title">详细量表</div>
@@ -257,11 +254,11 @@ function renderScale(r){
       ${makeBars(lordRows)}
     </div>
     <div class="scale-section">
-      <div class="scale-subtitle">你触及的三国英雄</div>
+      <div class="scale-subtitle">三国英雄 · 相似度排行</div>
       ${makeBars(figRows.length ? figRows : [{name:"（无）", pct:0}])}
-      <p class="scale-tip">你最代表的英雄加最多分，同阵营英雄得细微差分；未触发的英雄不列入。</p>
+      <p class="scale-tip">数值为该英雄在你命中英雄总分里的占比，越高越像；未触发的英雄不列入。</p>
     </div>
-    <p class="scale-tip">注：主公与人物分别计分，因此它们可以不同。例如适合追随曹操，但性格更像司马懿。</p>
+    <p class="scale-tip">注：主公与人物分别计分，因此可以不同。例如适合追随曹操，却性格更像司马懿，不算冲突。</p>
   `;
 }
 
