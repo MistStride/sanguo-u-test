@@ -6,7 +6,7 @@ const LORDS = {
     analysis:"你重情义、守道义，宁可慢一步也要站得住大义。追随刘备这样的人，你会在共患难中赢得真心，也最适合在讲信义、重团队的土壤里成长。你的短板是有时太重情面、下不了狠心——该断时不妨果断些。" },
   cao:  { name:"曹操", zi:"字孟德 · 魏武帝", title:"乱世奸雄 / 治世能臣", seal:"曹",
     analysis:"你有野心也有本事，欣赏实干与才干胜过出身。追随曹操，你能在唯才是举的环境里凭能力上位，前提是敢拼、不怕争议。你的短处是疑心重、易走极端——信人之前先给彼此一个缓冲。" },
-  sun:  { name:"孙权", zi:"字仲谋 · 吴大帝", title:"江东之主", seal:"孙",
+  sun:  { name:"孙权", zi:"字仲谋 · 吴大帝", title:"守成之主", seal:"孙",
     analysis:"你冷静稳重，懂得借势与平衡。追随孙权，你适合在稳固的盘子里慢慢做大，不冒无谓的险，却能坐得住江山。你的短板是有时过于求稳、缺乏破局魄力——机会来时，不妨赌一把。" },
   yuan: { name:"袁绍", zi:"字本初 · 冀州之主", title:"名门之主", seal:"袁",
     analysis:"你重体面、讲出身、性情宽厚，天然招人亲近。追随袁绍，你会在名望与资源里起步很高。但你要当心自己优柔寡断的老毛病——谋得多、断得少，最容易错失天时。" },
@@ -31,7 +31,7 @@ const QUESTIONS = [
   { theme:"志向", q:"若生于汉末乱世，你最大的志向是？", opts:[
     { t:"上报国家、下安黎庶，兴复汉室", l:"liu", f:"guanyu" },
     { t:"宁我负人，不做被负之人，做乱世真雄", l:"cao", f:"sima" },
-    { t:"守好江东基业，护住身边人", l:"sun", f:"zhaoyun" },
+    { t:"守好自己的一方基业，护住身边的人", l:"sun", f:"zhaoyun" },
     { t:"凭一身绝艺，闯出万世威名", l:"lvbu", f:"zhouyu" }
   ]},
   { theme:"用人", q:"招贤纳士时，你最看重什么？", opts:[
@@ -94,7 +94,7 @@ const WEIGHT = 3;
 
 /* ---------- 状态 ---------- */
 let current = 0;
-const answers = new Array(QUESTIONS.length).fill(null); // 存选项索引
+const answers = new Array(QUESTIONS.length).fill(null); // 存用户选中的选项对象
 
 /* ---------- DOM ---------- */
 const $ = (id) => document.getElementById(id);
@@ -107,6 +107,16 @@ const screens = {
 function showScreen(name){
   Object.values(screens).forEach(s => s.classList.add("hidden"));
   screens[name].classList.remove("hidden");
+}
+
+/* ---------- 工具：洗牌（Fisher–Yates），每题选项随机排序 ---------- */
+function shuffle(arr){
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
 }
 
 /* ---------- 渲染题目 ---------- */
@@ -122,22 +132,25 @@ function renderQuestion(){
   const box = $("options");
   box.innerHTML = "";
   const marks = ["甲","乙","丙","丁"];
-  item.opts.forEach((opt, i) => {
+  // 关键：每题选项随机排序，主公不再固定占某一位置
+  const shown = shuffle(item.opts);
+  shown.forEach((opt, i) => {
     const btn = document.createElement("button");
-    btn.className = "option" + (answers[current] === i ? " selected" : "");
+    btn._opt = opt;
+    btn.className = "option" + (answers[current] === opt ? " selected" : "");
     btn.innerHTML = `<span class="opt-mark">${marks[i]}</span>${opt.t}`;
-    btn.addEventListener("click", () => choose(i));
+    btn.addEventListener("click", () => choose(opt));
     box.appendChild(btn);
   });
 
   $("btn-back").classList.toggle("hidden", current === 0);
 }
 
-function choose(i){
-  answers[current] = i;
-  // 即时高亮
-  [...$("options").children].forEach((el, idx) =>
-    el.classList.toggle("selected", idx === i));
+function choose(opt){
+  answers[current] = opt;
+  // 即时高亮（按选项对象引用比对）
+  [...$("options").children].forEach(el =>
+    el.classList.toggle("selected", el._opt === opt));
   // 轻延迟后进入下一题，给视觉反馈
   setTimeout(() => {
     if (current < QUESTIONS.length - 1){ current++; renderQuestion(); }
@@ -155,11 +168,11 @@ function calcScores(){
   Object.keys(LORDS).forEach(k => lord[k] = 0);
   Object.keys(FIGURES).forEach(k => fig[k] = 0);
 
-  answers.forEach((ans, qi) => {
+  answers.forEach((ans) => {
     if (ans === null) return;
-    const opt = QUESTIONS[qi].opts[ans];
-    lord[opt.l] += WEIGHT;
-    fig[opt.f]  += WEIGHT;
+    // ans 是用户选中的选项对象，已含 l（主公）与 f（人物）
+    lord[ans.l] += WEIGHT;
+    fig[ans.f]  += WEIGHT;
   });
 
   // 主公最大可能得分（每题该主公最多拿 WEIGHT 分）
