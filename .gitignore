@@ -1,0 +1,11 @@
+# 操作系统 / 编辑器
+.DS_Store
+Thumbs.db
+*.swp
+
+# 日志与临时文件
+*.log
+_verify.js
+
+# 依赖（本项目无构建，留空以防误带）
+node_modules/

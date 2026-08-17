@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>三国主公适配测试 · 你最适合追随谁</title>
+  <meta name="description" content="测一测你最适合追随哪位三国主公，以及你最像哪一位历史人物。" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="paper-grain"></div>
+
+  <main class="scroll" id="app">
+
+    <!-- 开场页 -->
+    <section class="screen" id="screen-intro">
+      <div class="seal" aria-hidden="true">测</div>
+      <h1 class="title">三国主公适配测试</h1>
+      <p class="subtitle">乱世将至，你当追随何人？</p>
+      <div class="intro-rule"></div>
+      <p class="intro-text">
+        十道小题，照见你的性情形藏。<br />
+        测罢便知——<br />
+        你最宜追随哪位主公，又最似哪位古人。
+      </p>
+      <button class="btn btn-primary" id="btn-start">入　局</button>
+      <p class="intro-foot">约 2 分钟 · 手机电脑皆宜</p>
+    </section>
+
+    <!-- 答题页 -->
+    <section class="screen hidden" id="screen-quiz">
+      <div class="quiz-head">
+        <span class="quiz-count" id="quiz-count">第 1 / 10 题</span>
+        <span class="quiz-lord" id="quiz-theme">志向</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+      <h2 class="question" id="question-text">题目占位</h2>
+      <div class="options" id="options"></div>
+      <button class="btn btn-ghost btn-back hidden" id="btn-back">上一题</button>
+    </section>
+
+    <!-- 结果页 -->
+    <section class="screen hidden" id="screen-result">
+      <div class="seal seal-sm" aria-hidden="true">果</div>
+      <p class="result-label">你的适配主公</p>
+      <div class="lord-card">
+        <div class="lord-seal" id="lord-seal">刘</div>
+        <div class="lord-meta">
+          <h2 class="lord-name" id="lord-name">刘备</h2>
+          <p class="lord-zihao" id="lord-zihao">字玄德 · 昭烈帝</p>
+          <p class="lord-title" id="lord-title">仁德之主</p>
+        </div>
+        <div class="match-badge"><span id="match-pct">92</span><i>%</i><small>适配度</small></div>
+      </div>
+
+      <div class="analysis" id="lord-analysis">分析占位</div>
+
+      <div class="twin">
+        <div class="twin-box">
+          <p class="twin-label">你最像的历史人物</p>
+          <p class="twin-name" id="figure-name">关羽</p>
+          <p class="twin-zihao" id="figure-zihao">字云长</p>
+          <p class="twin-desc" id="figure-desc">忠义双全、傲骨铮铮。</p>
+        </div>
+        <div class="twin-box">
+          <p class="twin-label">你的次要倾向</p>
+          <p class="twin-name" id="second-name">曹操</p>
+          <p class="twin-zihao" id="second-title">乱世奸雄</p>
+          <p class="twin-desc" id="second-desc">你骨子里也有三分枭雄之气。</p>
+        </div>
+      </div>
+
+      <div class="share-row">
+        <button class="btn btn-primary" id="btn-share">分享我的结果</button>
+        <button class="btn btn-ghost" id="btn-copy">复制文案</button>
+      </div>
+      <button class="btn btn-line" id="btn-retry">再测一次</button>
+      <p class="result-foot" id="share-url"></p>
+    </section>
+
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
